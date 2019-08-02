@@ -1,0 +1,33 @@
+// Juust a few functions common to the different scripts.
+
+bool linkAlreadyTalking;
+
+int ShowString(int string, int type, int style, float x, float y)
+{
+    int stringID=Tango_GetFreeString(type);
+    if(stringID==TANGO_INVALID)
+        return stringID;
+    
+    Tango_ClearString(stringID);
+    Tango_SetString(stringID, string);
+    Tango_SetStringStyle(stringID, style);
+    Tango_SetStringPosition(stringID, x, y);
+    Tango_ActivateString(stringID);
+    
+    return stringID;
+}
+
+int ShowMessage(int message, int type, int style, float x, float y)
+{
+    int stringID=Tango_GetFreeString(type);
+    if(stringID==TANGO_INVALID)
+        return stringID;
+    
+    Tango_ClearString(stringID);
+    Tango_SetMessage(stringID, message);
+    Tango_SetStringStyle(stringID, style);
+    Tango_SetStringPosition(stringID, x, y);
+    Tango_ActivateString(stringID);
+    
+    return stringID;
+}

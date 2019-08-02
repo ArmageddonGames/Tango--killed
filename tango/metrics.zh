@@ -1,0 +1,73 @@
+// tango.zh alpha 1
+
+bool __Tango_CharacterWillFit(int character, int font, int left, int right)
+{
+    return right-left>=__Tango_GetCharacterWidth(character, font);
+}
+
+
+int __Tango_GetTargetOffset(int defStart, int dataStart, int styleStart, int font)
+{
+    return __Tango_StringData[dataStart+__TANGO_DATA_CHAR_Y]-
+           __TANGO_STRING_DEFS[defStart+__TANGO_STRDEF_Y]+
+           font[__TANGO_FONT_CHAR_HEIGHT]-
+           __Tango_Styles[styleStart+TANGO_STYLE_TEXT_HEIGHT];
+}
+
+bool __Tango_WordWillFit(int ptr, int font, int left, int right)
+{
+    return (right-left>=__Tango_GetWordWidth(ptr, font));
+}
+
+
+int __Tango_GetWordWidth(int ptr, int font)
+{
+    int width=0;
+    int character;
+    
+    while(true)
+    {
+        character=__Tango_StringBuffer[ptr];
+        
+        if(character==TANGO_CHAR_NULL ||
+           character==TANGO_CHAR_SPACE ||
+           character==TANGO_CHAR_NEWLINE)
+            break;
+        
+        if(character>=TANGO_CHAR_SPACE)
+            width+=__Tango_GetCharacterWidth(character, font);
+        
+        if(__Tango_IsSpecialDataMarker(character))
+            ptr++; // Skip it
+        
+        ptr++;
+    }
+    
+    return width;
+}
+
+// Get the width of a character. The character is assumed to be a space
+// or a valid printable character.
+int __Tango_GetCharacterWidth(int character, int font)
+{
+    if(font[__TANGO_FONT_PITCH]==TANGO_FONT_MONOSPACE)
+        return font[__TANGO_FONT_WIDTH];
+    else
+        return font[character+__TANGO_FONT_ASCII_TO_TANGO];
+}
+
+
+
+// TODO: Pretty sure these two are unnecessary...
+int __Tango_GetStringLeftEdge(int dataStart, int styleStart)
+{
+    return __Tango_StringData[dataStart+__TANGO_DATA_SCREEN_X]+
+           __Tango_Styles[styleStart+TANGO_STYLE_TEXT_X];
+}
+
+int __Tango_GetStringRightEdge(int dataStart, int styleStart)
+{
+    return __Tango_StringData[dataStart+__TANGO_DATA_SCREEN_X]+
+           __Tango_Styles[styleStart+TANGO_STYLE_TEXT_X]+
+           __Tango_Styles[styleStart+TANGO_STYLE_TEXT_WIDTH];
+}

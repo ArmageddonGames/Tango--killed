@@ -1,0 +1,26 @@
+// Just this...
+
+global script Init
+{
+    void run()
+    {
+        SetUpStyles();
+    }
+}
+
+global script DemoActiveScript
+{
+    void run()
+    {
+        while(true)
+        {
+            if(Link->Action==LA_SCROLLING)
+                linkAlreadyTalking=false;
+            
+            Tango_Update1();
+            Waitdraw();
+            Tango_Update2();
+            Waitframe();
+        }
+    }
+}

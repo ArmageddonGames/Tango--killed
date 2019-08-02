@@ -1,0 +1,442 @@
+// tango.zh alpha 1
+// Function and variable stuff
+
+int __Tango_RunFlowControl(int stringID, int index, int dataStart, int styleStart, bool clear)
+{
+    int args[1];
+    int type=__Tango_StringBuffer[index+1];
+    int ret=0;
+    int offset=2;
+    
+    if(type==__TANGO_FLOW_IF)
+    {
+        // Only read the first argument
+        offset+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 1, args);
+        if(args[0]!=0)
+        {
+            if(__Tango_StringBuffer[index+offset]==__TANGO_FLOW_MARKER)
+                ret=__Tango_RunFlowControl(stringID, index+offset, dataStart, styleStart, false);
+            else // Function
+                __Tango_RunFunction(stringID, index+offset, dataStart, styleStart, false, 0);
+        }
+    }
+    else // @while
+    {
+        offset+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 1, args);
+        if(args[0]!=0)
+        {
+            if(__Tango_StringBuffer[index+offset]==__TANGO_FLOW_MARKER)
+                __Tango_RunFlowControl(stringID, index+offset, dataStart, styleStart, false);
+            else // Function
+                __Tango_RunFunction(stringID, index+offset, dataStart, styleStart, false, 0);
+            clear=false;
+            ret=1;
+        }
+    }
+    
+    if(clear)
+    {
+        int depth=0;
+        int character;
+        int end=index;
+        
+        do
+        {
+            character=__Tango_StringBuffer[end];
+            
+            if(character==__TANGO_FLOW_MARKER)
+                depth++;
+            else if(character==__TANGO_FLOW_END_MARKER)
+                depth--;
+            
+            end++;
+        } while(depth>0);
+        
+        __Tango_SetPadding(index, end);
+    }
+    
+    return ret;
+}
+
+// Reads a function from __Tango_StringBuffer and executes it. Returns
+// the result of the function or 0 if it has none.
+// If the clear argument is true, the function may be overwritten with padding,
+// which is necessary for string processing to proceed.
+// endPtr is a single-element array that stores the position after the function.
+// __Tango_ReadArgs() needs it.
+
+
+int __Tango_RunFunction(int stringID, int index, int dataStart, int styleStart, bool clear, int lenPtr)
+{
+    int args[2];
+    int function=__Tango_StringBuffer[index+1];
+    int ret=0;
+    int length=2;
+    
+    // TODO Sort by numeric value
+    
+    // @set
+    // Special case
+    if(function==__TANGO_FUNC_SET)
+    {
+        // Skip the first argument
+        length+=2;
+        length+=__Tango_ReadArgs(stringID, index+4, dataStart, styleStart, 1, args);
+        __Tango_SetVar(__Tango_StringBuffer[index+3], args[0], dataStart);
+    }
+    
+    // @add
+    // 2 args
+    else if(function==__TANGO_FUNC_ADD)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 2, args);
+        ret=args[0]+args[1];
+    }
+    // @playsfx
+    // 1 arg
+    else if(function==__TANGO_FUNC_PLAYSFX)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 1, args);
+        Game->PlaySound(args[0]);
+    }
+    
+    // @rand
+    // 2 args
+    else if(function==__TANGO_FUNC_RAND)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 2, args);
+        ret=Rand(args[0], args[1]);
+    }
+    
+    // @delay
+    // 1 arg
+    else if(function==__TANGO_FUNC_DELAY)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 1, args);
+        __Tango_StringData[dataStart+__TANGO_DATA_COUNTER]=args[0];
+    }
+    
+    // @char
+    // 1 arg
+    else if(function==__TANGO_FUNC_CHAR)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 1, args);
+        __Tango_SetPadding(index, index+length);
+        __Tango_StringBuffer[index]=args[0];
+        clear=false;
+    }
+    
+    // @number
+    // 1 arg
+    else if(function==__TANGO_FUNC_NUMBER)
+    {
+        int buf[13];
+        int numChars;
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 1, args);
+        
+        __Tango_SetPadding(index, index+length);
+        numChars=itoa(buf, args[0]);
+        for(int i=0; i<numChars; i++)
+        {
+            __Tango_StringBuffer[index]=buf[i];
+            index++;
+        }
+        
+        clear=false;
+    }
+    
+    // @ordinal
+    // 1 arg
+    else if(function==__TANGO_FUNC_ORDINAL)
+    {
+        int buf[9];
+        int numChars;
+        int ordinal;
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 1, args);
+        
+        __Tango_SetPadding(index, index+length);
+        args[0]<<=0; // Don't handle fractional numbers...
+        numChars=itoa(buf, args[0]);
+        ordinal=__Tango_GetOrdinal(args[0]);
+        
+        if(ordinal==1) // "st"
+        {
+            buf[numChars]=115;
+            buf[numChars+1]=116;
+        }
+        else if(ordinal==2) // "nd"
+        {
+            buf[numChars]=110;
+            buf[numChars+1]=100;
+        }
+        else if(ordinal==3) // "rd"
+        {
+            buf[numChars]=114;
+            buf[numChars+1]=100;
+        }
+        else // "th"
+        {
+            buf[numChars]=116;
+            buf[numChars+1]=104;
+        }
+        
+        numChars+=2;
+        for(int i=0; i<numChars; i++)
+        {
+            __Tango_StringBuffer[index]=buf[i];
+            index++;
+        }
+        
+        clear=false;
+    }
+    
+    // @savename
+    // 0 args
+    else if(function==__TANGO_FUNC_SAVENAME)
+    {
+        int buf[9];
+        Game->GetSaveName(buf);
+        __Tango_SetPadding(index, index+length);
+        for(int i=0; buf[i]>0; i++)
+        {
+            __Tango_StringBuffer[index]=buf[i];
+            index++;
+        }
+        
+        clear=false;
+    }
+    
+    // @choice
+    // 1 arg
+    else if(function==__TANGO_FUNC_CHOICE)
+    {
+        // This function actually just inserts a special character for
+        // __Tango_Process() to handle.
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 1, args);
+        __Tango_SetPadding(index, index+length);
+        __Tango_StringBuffer[index]=__TANGO_CHAR_CHOICE;
+        __Tango_StringBuffer[index+1]=args[0];
+        clear=false;
+    }
+    
+    // @getchoice
+    // 0 args
+    else if(function==__TANGO_FUNC_GETCHOICE)
+    {
+        __Tango_Data[__TANGO_IDX_MENU_CURSOR]=1;
+        
+        // Insert the character to switch __Tango_Process() back to
+        // normal behavior.
+        __Tango_StringBuffer[index]=__TANGO_CHAR_CHOICE_END;
+        __Tango_StringBuffer[index+1]=__TANGO_CHAR_PADDING;
+        clear=false;
+    }
+    
+    // @equal
+    // 2 args
+    else if(function==__TANGO_FUNC_EQUAL)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 2, args);
+        if(args[0]==args[1])
+            ret=1;
+        else
+            ret=0;
+    }
+    
+    else if(function==__TANGO_FUNC_NOTEQUAL)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 2, args);
+        if(args[0]==args[1])
+            ret=0;
+        else
+            ret=1;
+    }
+    
+    // @greater
+    // 2 args
+    else if(function==__TANGO_FUNC_GREATER)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 2, args);
+        if(args[0]>args[1])
+            ret=1;
+        else
+            ret=0;
+    }
+    
+    // @less
+    // 2 args
+    else if(function==__TANGO_FUNC_LESS)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 2, args);
+        if(args[0]<args[1])
+            ret=1;
+        else
+            ret=0;
+    }
+    
+    // @waituntil
+    // 1 arg
+    else if(function==__TANGO_FUNC_WAITUNTIL)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 1, args);
+        if(args[0]==0)
+        {
+            clear=false;
+            ret=1;
+        }
+    }
+    
+    // @append
+    // 1 arg
+    else if(function==__TANGO_FUNC_APPEND)
+    {
+        length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, 1, args);
+        __Tango_AppendMessage(stringID, index+4, args[0]);
+    }
+    
+    // Either a custom function or something unknown
+    else
+    {
+        for(int i=0; i<__TANGO_NUM_CUSTOM_FUNCTIONS*2; i+=2)
+        {
+            if(function==__TANGO_CUSTOM_FUNCTIONS[i])
+            {
+                int numArgs=__TANGO_CUSTOM_FUNCTIONS[i+1];
+                length+=__Tango_ReadArgs(stringID, index+2, dataStart, styleStart, numArgs, args);
+                ret=__Tango_RunCustomFunction(function, args);
+                break;
+            }
+        }
+    }
+    
+    if(lenPtr>0)
+        lenPtr[0]=length;
+    
+    if(clear)
+        __Tango_SetPadding(index, index+length);
+    
+    return ret;
+}
+
+int __Tango_ReadArgs(int stringID, int startIndex, int dataStart, int styleStart, int numArgs, int args)
+{
+    int argType;
+    int index=startIndex;
+    
+    for(int i=0; i<numArgs; i++)
+    {
+        argType=__Tango_StringBuffer[index];
+        
+        if(argType==__TANGO_FUNC_MARKER)
+        {
+            int length[1];
+            args[i]=__Tango_RunFunction(stringID, index, dataStart, styleStart, false, length);
+            index+=length[0];
+        }
+
+        else if(argType==__TANGO_VAR_MARKER)
+        {
+            args[i]=__Tango_GetVar(__Tango_StringBuffer[index+1], dataStart, styleStart);
+            index+=2;
+        }
+        
+        else // Number
+        {
+            args[i]=__Tango_StringBuffer[index+1];
+            index+=2;
+        }
+    }
+    
+    return index-startIndex;
+}
+
+float __Tango_GetVar(int var, int dataStart, int styleStart)
+{
+    if(var>=__TANGO_VAR_D0 && var<=__TANGO_VAR_D7)
+    {
+        int index=(var-__TANGO_VAR_D0)*10000;
+        return Tango_D[index];
+    }
+    else if(var==__TANGO_VAR_A0)
+        return __Tango_StringData[dataStart+TANGO_DATA_A0];
+    else if(var==__TANGO_VAR_A1)
+        return __Tango_StringData[dataStart+TANGO_DATA_A1];
+    else if(var==__TANGO_VAR_CSET)
+        return __Tango_GetCurrentCSet(dataStart, styleStart);
+    else if(var==__TANGO_VAR_COLOR)
+        return __Tango_GetCurrentColor(dataStart, styleStart);
+    else if(var==__TANGO_VAR_SPEED)
+        return __Tango_GetCurrentSpeed(dataStart, styleStart);
+    else if(var==__TANGO_VAR_SFX)
+        return __Tango_GetCurrentSFX(dataStart, styleStart);
+    else if(var==__TANGO_VAR_X)
+        return __Tango_StringData[dataStart+__TANGO_DATA_SCREEN_X];
+    else if(var==__TANGO_VAR_Y)
+        return __Tango_StringData[dataStart+__TANGO_DATA_SCREEN_Y];
+    else if(var==__TANGO_VAR_X)
+        return __Tango_StringData[dataStart+__TANGO_DATA_NEXT_STRING];
+    else if(var==__TANGO_VAR_DEFAULT)
+        return TANGO_DEFAULT; // TODO This isn't really correct, but is there a valid case where it might fail?
+    else if(var==__TANGO_VAR_CHOSEN)
+        return __Tango_Data[__TANGO_IDX_LAST_CHOICE];
+    
+    return 0;
+}
+
+void __Tango_SetVar(int var, float value, int dataStart)
+{
+    if(var>=__TANGO_VAR_D0 && var<=__TANGO_VAR_D7)
+    {
+        int index=(var-__TANGO_VAR_D0)*10000;
+        Tango_D[index]=value;
+    }
+    else if(var==__TANGO_VAR_A0)
+        __Tango_StringData[dataStart+TANGO_DATA_A0]=value;
+    else if(var==__TANGO_VAR_A1)
+        __Tango_StringData[dataStart+TANGO_DATA_A1]=value;
+    else if(var==__TANGO_VAR_CSET)
+        __Tango_StringData[dataStart+__TANGO_DATA_CSET]=value;
+    else if(var==__TANGO_VAR_COLOR)
+        __Tango_StringData[dataStart+__TANGO_DATA_COLOR]=value;
+    else if(var==__TANGO_VAR_SPEED)
+        __Tango_StringData[dataStart+__TANGO_DATA_SPEED]=value;
+    else if(var==__TANGO_VAR_SFX)
+        __Tango_StringData[dataStart+__TANGO_DATA_SFX]=value;
+    else if(var==__TANGO_VAR_X)
+        __Tango_StringData[dataStart+__TANGO_DATA_SCREEN_X]=value;
+    else if(var==__TANGO_VAR_Y)
+        __Tango_StringData[dataStart+__TANGO_DATA_SCREEN_Y]=value;
+    else if(var==__TANGO_VAR_NEXT)
+        __Tango_StringData[dataStart+__TANGO_DATA_NEXT_STRING]=value;
+}
+
+void __Tango_SetPadding(int index, int end)
+{
+    for(; index<end; index++)
+        __Tango_StringBuffer[index]=__TANGO_CHAR_PADDING;
+}
+
+void __Tango_AppendMessage(int stringID, int index, int messageID)
+{
+    // Find the end of the string
+    while(!(__Tango_StringBuffer[index]==TANGO_CHAR_NULL &&
+            !__Tango_IsSpecialDataMarker(__Tango_StringBuffer[index-1])))
+        index++;
+    
+    int buffer[256];
+    Game->GetMessage(messageID, buffer);
+    __Tango_LoadString(stringID, buffer, index);
+}
+
+int __Tango_GetOrdinal(int num)
+{
+    if(num<0)
+        num=-num;
+    
+    // Check for 11, 12, and 13 first
+    num%=100;
+    if(num==11 || num==12 || num==13)
+        return 0;
+    
+    return num%10;
+}

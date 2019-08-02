@@ -1,0 +1,244 @@
+// tango.zh alpha 1
+// Functions involved in loading strings into __Tango_StringBuffer
+
+void Tango_SetString(int stringID, int string)
+{
+    int pos=__Tango_GetStringDefData(stringID, __TANGO_STRDEF_START);
+    
+    __Tango_LoadString(stringID, string, pos);
+}
+
+void Tango_SetMessage(int stringID, int messageID)
+{
+    int buffer[256];
+    Game->GetMessage(messageID, buffer);
+    int pos=__Tango_GetStringDefData(stringID, __TANGO_STRDEF_START);
+    //Tango_SetString(stringID, buffer,);
+    __Tango_LoadString(stringID, buffer, pos);
+}
+
+void __Tango_LoadString(int stringID, int string, int dest)
+{
+    int src=0;
+    int dataStart=stringID*__TANGO_SIZEOF_DATA;
+    int defStart=stringID*__TANGO_SIZEOF_STRDEF;
+    int newPos[2]; // __Tango_ParseCode() output
+    
+    while(true)
+    {
+        if(string[src]==__TANGO_CODE_DELIMITER)
+        {
+            // Check if it's just @@ first
+            if(string[src+1]==__TANGO_CODE_DELIMITER)
+            {
+                __Tango_StringBuffer[dest]=__TANGO_CODE_DELIMITER;
+                src+=2;
+                dest++;
+            }
+            else
+            {
+                int oldDest=dest;
+                __Tango_ParseCode(string, src+1, dest, newPos);
+                src=newPos[0];
+                dest=newPos[1];
+                
+                int padding=__Tango_CharsToPad(__Tango_StringBuffer[oldDest+1], oldDest, dest);
+                for(; padding>0; padding--)
+                {
+                    __Tango_StringBuffer[dest]=__TANGO_CHAR_PADDING;
+                    dest++;
+                }
+            }
+        }
+        else
+        {
+            __Tango_StringBuffer[dest]=string[src];
+            
+            if(string[src]==0)
+                break;
+            
+            src++;
+            dest++;
+        }
+    }
+    
+    // Cut off any trailing spaces
+    for(dest=dest; dest>1; dest--)
+    {
+        if(__Tango_StringBuffer[dest-1]==TANGO_CHAR_SPACE)
+        {
+            // Make sure it's not a function argument first...
+            if(__Tango_IsSpecialDataMarker(__Tango_StringBuffer[dest-2]))
+                break;
+        }
+        else
+            break;
+    }
+    
+    __Tango_StringBuffer[dest]=TANGO_CHAR_NULL;
+}
+
+void __Tango_ParseCode(int string, int src, int dest, int output)
+{
+    bool done=false;
+    int character;
+    int accumulator=0;
+    
+    while(!done)
+    {
+        character=string[src];
+        
+        if(character>=__TANGO_CHAR_a && character<=__TANGO_CHAR_z)
+        {
+            character=character-__TANGO_CHAR_a+1; // 1-26
+            accumulator*=__TANGO_CODE_FACTOR;
+            accumulator+=character/10000;
+            src++;
+        }
+        else if(character>=__TANGO_CHAR_0 && character<=__TANGO_CHAR_9)
+        {
+            character=character-__TANGO_CHAR_0+27; // 27-36
+            accumulator*=__TANGO_CODE_FACTOR;
+            accumulator+=character/10000;
+            src++;
+        }
+        
+        else if(character==__TANGO_CHAR_LPAREN)
+        {
+            // Found a left parenthesis, so this is flow control or a function
+            if(accumulator==__TANGO_FLOW_IF || accumulator==__TANGO_FLOW_WHILE)
+                __Tango_StringBuffer[dest]=__TANGO_FLOW_MARKER;
+            else
+                __Tango_StringBuffer[dest]=__TANGO_FUNC_MARKER;
+            
+            __Tango_StringBuffer[dest+1]=accumulator;
+            __Tango_ParseArgs(string, src+1, dest+2, output);
+            src=output[0];
+            dest=output[1];
+            
+            // @if and @while need an end marker
+            if(accumulator==__TANGO_FLOW_IF || accumulator==__TANGO_FLOW_WHILE)
+            {
+                __Tango_StringBuffer[dest]=__TANGO_FLOW_END_MARKER;
+                dest++;
+            }
+            
+            done=true;
+        }
+        else if(character==TANGO_CHAR_SPACE || character==__TANGO_CHAR_RPAREN)
+        {
+            // Found a space or right parenthesis, so this is a variable
+            done=true;
+            __Tango_StringBuffer[dest]=__TANGO_VAR_MARKER;
+            __Tango_StringBuffer[dest+1]=accumulator;
+            dest+=2;
+        }
+        else // Invalid; just skip it
+            src++;
+    }
+    
+    output[0]=src;
+    output[1]=dest;
+}
+
+// Parses the arguments to a string function and puts the results into
+// __Tango_StringBuffer. Starts after the opening parenthesis and ends
+// after the closing parenthesis.
+void __Tango_ParseArgs(int string, int src, int dest, int output)
+{
+    bool done=false;
+    int character;
+    
+    while(!done)
+    {
+        character=string[src];
+        
+        if((character>=__TANGO_CHAR_0 && character<=__TANGO_CHAR_9) ||
+           character==__TANGO_CHAR_MINUS)
+        {
+            // This is a numeric argument
+            __Tango_ParseNumber(string, src, dest, output);
+            src=output[0];
+            dest=output[1];
+        }
+        else if(character==__TANGO_CODE_DELIMITER)
+        {
+            // This is a code argument
+            __Tango_ParseCode(string, src, dest, output);
+            src=output[0];
+            dest=output[1];
+        }
+        else if(character==__TANGO_CHAR_RPAREN)
+        {
+            // The end
+            done=true;
+            src++;
+        }
+        else // Either a space or an invalid character; skip it
+            src++;
+    }
+    
+    output[0]=src;
+    output[1]=dest;
+}
+
+// Converts a number written out in a string to a ZScript number and
+// loads the result into __Tango_StringBuffer.
+void __Tango_ParseNumber(int string, int src, int dest, int output)
+{
+    bool done=false;
+    bool negative=false;
+    int character;
+    int accumulator=0;
+    
+    character=string[src];
+    if(character==__TANGO_CHAR_MINUS)
+    {
+        negative=true;
+        src++;
+    }
+    
+    while(!done)
+    {
+        character=string[src];
+        
+        if(character>=__TANGO_CHAR_0 && character<=__TANGO_CHAR_9)
+        {
+            accumulator*=10;
+            accumulator+=character-__TANGO_CHAR_0;
+            src++;
+        }
+        else // TODO decimal points
+        {
+            // Invalid character, hopefully a space or right parenthesis
+            if(negative)
+                accumulator=-accumulator;
+            __Tango_StringBuffer[dest]=__TANGO_NUM_MARKER;
+            __Tango_StringBuffer[dest+1]=accumulator;
+            dest+=2;
+            done=true;
+        }
+    }
+    
+    output[0]=src;
+    output[1]=dest;
+}
+
+// Find the number of padding characters to add for a function. This will be
+// fewer than the necessary number because the function and its arguments
+// can be overwritten when the function runs.
+// start: Starting index of function
+// end: one after the end
+int __Tango_CharsToPad(int function, int start, int end)
+{
+    int needed;
+    
+    if(function==__TANGO_FUNC_NUMBER)
+        needed=__TANGO_PAD_NUMBER;
+    else if(function==__TANGO_FUNC_SAVENAME)
+        needed=__TANGO_PAD_SAVENAME;
+    else if(function==__TANGO_FUNC_ORDINAL)
+        needed=__TANGO_PAD_ORDINAL;
+    
+    return Max(needed-(end-start), 0);
+}

@@ -1,0 +1,103 @@
+// tango.zh alpha 1
+
+// How fast messages scroll
+const int __TANGO_SCROLL_SPEED = 4;
+
+// How much holding A speeds up text
+const int __TANGO_SPEEDUP_FACTOR = 5;
+
+// Whether a sound is played when a space is printed
+const int __TANGO_SFX_ON_SPACE = 0;
+
+// Strings that advance automatically will wait this long before doing so
+const int __TANGO_AUTO_ADVANCE_TIME = 90;
+
+// Layer to draw on
+const int __TANGO_DRAWING_LAYER = 6;
+
+// Offscreen bitmap to draw text on
+const int __TANGO_BITMAP = 6;
+
+// String codes are marked by this character
+// 64 is @
+const int __TANGO_CODE_DELIMITER = 64;
+
+// Whether the current string scrolls up before displaying the next one
+// rather than just disappearing
+const int __TANGO_SCROLL_TO_NEXT = 1;
+
+// Custom functions
+const int __TANGO_NUM_CUSTOM_FUNCTIONS = 1;
+
+const int FUNC_PORTRAIT = 1529.8275;
+
+int __TANGO_CUSTOM_FUNCTIONS[] = {
+    FUNC_PORTRAIT, 1    // ID, number of arguments
+};
+
+float __Tango_RunCustomFunction(float function, float args)
+{
+    if(function==FUNC_PORTRAIT)
+    {
+        // zeldaFrame[8] is Zelda's portrait tile
+        zeldaFrame[8]=args[0];
+        return 0;
+    }
+    
+    return 0;
+}
+
+// Available styles
+const int __TANGO_NUM_STYLES = 6;
+int __Tango_Styles[138]; // __TANGO_SIZEOF_STYLE * __TANGO_NUM_STYLES
+                         // __TANGO_SIZEOF_STYLE is currently 23
+
+// Available strings
+const int __TANGO_NUM_STRINGS = 4;
+int __Tango_StringBuffer[1280]; // Arbitrary size
+int __Tango_StringData[68]; // __TANGO_SIZEOF_DATA * __TANGO_NUM_STRINGS
+                            // __TANGO_SIZEOF_DATA is currently 17
+
+// String types and definitions
+const int TANGO_STRING_NAVI = 0;
+const int TANGO_STRING_POPUP = 1;
+const int TANGO_STRING_NORMAL = 2;
+
+int __TANGO_STRING_DEFS[] = {
+    // 0
+    TANGO_STRING_NAVI,
+    0,       // Starting index in __Tango_StringBuffer
+    256, 0,  // X, Y on offscreen bitmap
+    128, 64, // Width, height on offscreen bitmap
+    
+    // 1
+    TANGO_STRING_POPUP,
+    128,
+    256, 64,
+    128, 64,
+    
+    // 2
+    TANGO_STRING_NORMAL,
+    256,
+    0, 0,
+    256, 256,
+    
+    // 3
+    TANGO_STRING_NORMAL,
+    768,
+    0, 256,
+    256, 512
+};
+
+
+import "tango/common.zh"
+import "tango/drawing.zh"
+import "tango/functions.zh"
+import "tango/loading.zh"
+import "tango/menu.zh"
+import "tango/metrics.zh"
+import "tango/style.zh"
+import "tango/update.zh"
+import "tango/user.zh"
+
+import "tango/script.z"

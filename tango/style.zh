@@ -1,0 +1,72 @@
+// tango.zh alpha 1
+
+const int TANGO_STYLE_BACKDROP_TYPE           = 0; // TANGO_BACKDROP_*
+const int TANGO_STYLE_BACKDROP_DATA           = 1; // Complex only
+const int TANGO_STYLE_BACKDROP_COLOR          = 1; // Color only
+const int TANGO_STYLE_BACKDROP_TILE           = 1; // Frame and image only
+const int TANGO_STYLE_BACKDROP_CSET           = 2; // Frame and image only
+const int TANGO_STYLE_BACKDROP_WIDTH          = 3; // Image and color only
+const int TANGO_STYLE_BACKDROP_HEIGHT         = 4; // Image and color only
+const int TANGO_STYLE_TEXT_FONT               = 5;
+const int TANGO_STYLE_TEXT_X                  = 6;
+const int TANGO_STYLE_TEXT_Y                  = 7;
+const int TANGO_STYLE_TEXT_WIDTH              = 8;
+const int TANGO_STYLE_TEXT_HEIGHT             = 9;
+const int TANGO_STYLE_TEXT_CSET               = 10; // Default
+const int TANGO_STYLE_TEXT_COLOR              = 11; // Default (built-in fonts only)
+const int TANGO_STYLE_TEXT_SPEED              = 12; // Default
+const int TANGO_STYLE_TEXT_SFX                = 13; // Default
+const int TANGO_STYLE_TEXT_END_SFX            = 14;
+const int TANGO_STYLE_CURSOR_COMBO            = 15; // Settings for selection cursor
+const int TANGO_STYLE_CURSOR_CSET             = 16; 
+const int TANGO_STYLE_CURSOR_WIDTH            = 17;
+const int TANGO_STYLE_MORE_COMBO              = 18; // Settings for "Press A for more"
+const int TANGO_STYLE_MORE_CSET               = 19;
+const int TANGO_STYLE_MORE_X                  = 20;
+const int TANGO_STYLE_MORE_Y                  = 21;
+const int TANGO_STYLE_FLAGS                   = 22;
+const int __TANGO_SIZEOF_STYLE                = 23; // Size of style data
+
+const int TANGO_FLAG_ENABLE_SPEEDUP     = 00001b;
+const int TANGO_FLAG_ENABLE_SUPER_SPEED = 00010b;
+const int TANGO_FLAG_AUTO_ADVANCE       = 00100b;
+const int TANGO_FLAG_CARRY_OVER         = 01000b;
+const int TANGO_FLAG_BLOCK_INPUT        = 10000b;
+
+const int TANGO_BACKDROP_CLEAR            = 0;
+const int TANGO_BACKDROP_COLOR            = 1;
+const int TANGO_BACKDROP_COLOR_TRANS      = 2;
+const int TANGO_BACKDROP_IMAGE            = 3;
+const int TANGO_BACKDROP_IMAGE_TRANS      = 4;
+const int TANGO_BACKDROP_COMPLEX          = 5;
+
+void Tango_SetStyleAttribute(int style, int attribute, int value)
+{
+    if(style>=0 && style<__TANGO_NUM_STYLES)
+        __Tango_Styles[style*__TANGO_SIZEOF_STYLE+attribute]=value;
+}
+
+
+int Tango_GetStyleAttribute(int style, int attribute)
+{
+    return __Tango_Styles[style*__TANGO_SIZEOF_STYLE+attribute];
+}
+
+
+int Tango_GetStringStyle(int stringID)
+{
+    return __Tango_StringData[stringID*__TANGO_SIZEOF_DATA+__TANGO_DATA_STYLE];
+}
+
+
+void Tango_SetStringStyle(int stringID, int style)
+{
+    __Tango_StringData[stringID*__TANGO_SIZEOF_DATA+__TANGO_DATA_STYLE]=style;
+}
+
+
+int Tango_GetStringStyleAttribute(int stringID, int attribute)
+{
+    int style=__Tango_StringData[stringID*__TANGO_SIZEOF_DATA+__TANGO_DATA_STYLE];
+    return __Tango_Styles[style*__TANGO_SIZEOF_STYLE+attribute];
+}

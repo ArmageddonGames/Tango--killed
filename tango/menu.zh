@@ -1,0 +1,55 @@
+// tango.zh alpha 1
+// Menu-related stuff
+
+void __Tango_SetUpMenu(int styleStart)
+{
+    __Tango_Data[__TANGO_IDX_LAST_CHOICE]=0;
+    __Tango_Data[__TANGO_IDX_MENU_CURSOR]=1;
+    __Tango_Data[__TANGO_IDX_MENU_STYLE]=styleStart;
+}
+
+void __Tango_UpdateMenu()
+{
+    int pos=__Tango_Data[__TANGO_IDX_MENU_CURSOR]-1;
+    int max=__Tango_Data[__TANGO_IDX_CHOICE_COUNT]-1;
+    
+    if(Link->PressUp || Link->PressLeft)
+        if(pos==0)
+            pos=max;
+        else
+            pos--;
+    else if(Link->PressDown || Link->PressRight)
+        if(pos==max)
+            pos=0;
+        else
+            pos++;
+    
+    if(Link->PressA)
+    {
+        int dataStart=__TANGO_IDX_CHOICE_DATA+pos*__TANGO_SIZEOF_CHOICE;
+        __Tango_Data[__TANGO_IDX_LAST_CHOICE]=__Tango_Data[dataStart+__TANGO_CHOICE_VALUE];
+        __Tango_Data[__TANGO_IDX_MENU_CURSOR]=0;
+    }
+    else
+        __Tango_Data[__TANGO_IDX_MENU_CURSOR]=pos+1;
+}
+
+void __Tango_ReadChoice(int index, int which, int x, int y)
+{
+    int offset=which*__TANGO_SIZEOF_CHOICE;
+    __Tango_Data[__TANGO_IDX_CHOICE_DATA+offset+__TANGO_CHOICE_VALUE]=
+        __Tango_StringBuffer[index+1];
+    __Tango_Data[__TANGO_IDX_CHOICE_DATA+offset+__TANGO_CHOICE_X]=x;
+    __Tango_Data[__TANGO_IDX_CHOICE_DATA+offset+__TANGO_CHOICE_Y]=y;
+    __Tango_Data[__TANGO_IDX_CHOICE_COUNT]=which+1;
+}
+
+void __Tango_ShiftMenu(int amount)
+{
+    int index=__TANGO_IDX_CHOICE_DATA+__TANGO_CHOICE_Y;
+    for(int i=0; i<4; i++)
+    {
+        __Tango_Data[index]-=amount;
+        index+=__TANGO_SIZEOF_CHOICE;
+    }
+}

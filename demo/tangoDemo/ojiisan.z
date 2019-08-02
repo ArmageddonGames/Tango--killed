@@ -1,0 +1,64 @@
+// NPC variant. Uses a unique string and message style. Gives Link a sword.
+
+ffc script Ojiisan
+{
+    void run()
+    {
+        bool talking=false;
+        int stringID;
+        
+        int string[]= { KNJ_ICHI, KNJ_JIN, HG_DE, HG_HA, KNJ_KI, KNJ_KEN, HG_JI, HG_SMALL_YA, KUTEN,
+                        HG_KO, HG_RE, HG_WO, KNJ_JU, HG_KE, HG_YO, HG_U, KUTEN, TANGO_CHAR_NULL };
+        
+        while(true)
+        {
+            if(!talking && !linkAlreadyTalking && Link->PressA)
+            {
+                if(Link->Dir==DIR_UP)
+                {
+                    if(Abs(Link->X-this->X)<8 && Abs(Link->Y-8-this->Y)<8)
+                        talking=true;
+                }
+                else if(Link->Dir==DIR_DOWN)
+                {
+                    if(Abs(Link->X-this->X)<8 && Abs(Link->Y+16-this->Y)<8)
+                        talking=true;
+                }
+                else if(Link->Dir==DIR_LEFT)
+                {
+                    if(Abs(Link->X-16-this->X)<8 && Abs(Link->Y-this->Y)<8)
+                        talking=true;
+                }
+                else
+                {
+                    if(Abs(Link->X+19-this->X)<8 && Abs(Link->Y-this->Y)<8)
+                        talking=true;
+                }
+                
+                if(talking)
+                {
+                    stringID=ShowString(string, TANGO_STRING_NORMAL, STYLE_JAPANESE, 32, 32);
+                    if(stringID==TANGO_INVALID)
+                        talking=false;
+                    else
+                    {
+                        linkAlreadyTalking=true;
+                        Waitframes(20);
+                        item sword=Screen->CreateItem(5);
+                        sword->X=Link->X;
+                        sword->Y=Link->Y;
+                    }
+                }
+            }
+            
+            if(talking)
+            {
+                talking=Tango_StringIsVisible(stringID);
+                if(!talking)
+                    linkAlreadyTalking=false;
+            }
+            
+            Waitframe();
+        }
+    }
+}

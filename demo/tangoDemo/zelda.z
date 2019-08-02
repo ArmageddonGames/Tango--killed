@@ -1,0 +1,87 @@
+// An NPC variant that shows two messages with special styles.
+
+ffc script Zelda
+{
+    void run(int message1, int message2)
+    {
+        bool talking=false;
+        int stringID1;
+        int stringID2;
+        
+        while(true)
+        {
+            if(!talking && !linkAlreadyTalking && Link->PressA)
+            {
+                if(Link->Dir==DIR_UP)
+                {
+                    if(Abs(Link->X-this->X)<8 && Abs(Link->Y-8-this->Y)<8)
+                        talking=true;
+                }
+                else if(Link->Dir==DIR_DOWN)
+                {
+                    if(Abs(Link->X-this->X)<8 && Abs(Link->Y+16-this->Y)<8)
+                        talking=true;
+                }
+                else if(Link->Dir==DIR_LEFT)
+                {
+                    if(Abs(Link->X-16-this->X)<8 && Abs(Link->Y-this->Y)<8)
+                        talking=true;
+                }
+                else
+                {
+                    if(Abs(Link->X+19-this->X)<8 && Abs(Link->Y-this->Y)<8)
+                        talking=true;
+                }
+                
+                if(talking)
+                {
+                    // Get a string
+                    stringID1=Tango_GetFreeString(TANGO_STRING_NORMAL);
+                    if(stringID1==TANGO_INVALID)
+                    {
+                        talking=false;
+                        continue;
+                    }
+                    
+                    // Reserve it so the next call to Tango_GetFreeString()
+                    // doesn't return the same one
+                    Tango_ReserveString(stringID1);
+                    
+                    // Get another one
+                    stringID2=Tango_GetFreeString(TANGO_STRING_NORMAL);
+                    if(stringID2==TANGO_INVALID)
+                    {
+                        talking=false;
+                        continue;
+                    }
+                    
+                    ShowMessages(stringID1, stringID2, message1, message2);
+                }
+            }
+            
+            if(talking)
+            {
+                talking=Tango_StringIsVisible(stringID1);
+                if(!talking)
+                    linkAlreadyTalking=false;
+            }
+            
+            Waitframe();
+        }
+    }
+    
+    void ShowMessages(int stringID1, int stringID2, int message1, int message2)
+    {
+        Tango_ClearString(stringID1);
+        Tango_SetMessage(stringID1, message1);
+        Tango_SetStringStyle(stringID1, STYLE_ZELDA);
+        Tango_SetStringPosition(stringID1, 16, 8);
+        Tango_ActivateString(stringID1);
+        
+        Tango_ClearString(stringID2);
+        Tango_SetMessage(stringID2, message2);
+        Tango_SetStringStyle(stringID2, STYLE_LINK);
+        Tango_SetStringPosition(stringID2, 16, 90);
+        Tango_ActivateString(stringID2);
+    }
+}

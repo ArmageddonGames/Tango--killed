@@ -1,0 +1,222 @@
+// tango.zh alpha 1
+
+float Tango_D[8];
+int __Tango_PrevScreen;
+
+// 0:  Previous screen
+// 1:  Last menu choice made
+// 2:  Current menu cursor location (0 if disabled)
+// 3:  Number of menu choices
+// 4:  Start of menu string's style data
+// 5:  Choice 1 X
+// 6:  Choice 1 Y
+// 7:  Choice 1 value
+// 8:  Choice 2 X
+// 9:  Choice 2 Y
+// 10: Choice 2 value
+// 11: Choice 3 X
+// 12: Choice 3 Y
+// 13: Choice 3 value
+// 14: Choice 4 X
+// 15: Choice 4 Y
+// 16: Choice 4 value
+float __Tango_Data[17];
+
+const int __TANGO_IDX_PREV_SCREEN = 0;
+const int __TANGO_IDX_LAST_CHOICE = 1;
+const int __TANGO_IDX_MENU_CURSOR = 2;
+const int __TANGO_IDX_MENU_STYLE = 3;
+const int __TANGO_IDX_CHOICE_COUNT = 4;
+const int __TANGO_IDX_CHOICE_DATA = 5;
+const int __TANGO_SIZEOF_CHOICE = 3;
+const int __TANGO_CHOICE_X = 0;
+const int __TANGO_CHOICE_Y = 1;
+const int __TANGO_CHOICE_VALUE = 2;
+
+const int TANGO_STRING_ANY = -1;
+
+const int TANGO_DEFAULT = -1;
+const int TANGO_INVALID = -10;
+
+const int __TANGO_DATA_STYLE = 0;
+const int __TANGO_DATA_STATE = 1;
+const int __TANGO_DATA_POSITION = 2;
+const int __TANGO_DATA_COUNTER = 3;
+const int __TANGO_DATA_CHAR_X = 4;
+const int __TANGO_DATA_CHAR_Y = 5;
+const int __TANGO_DATA_SCREEN_X = 6;
+const int __TANGO_DATA_SCREEN_Y = 7;
+const int __TANGO_DATA_CSET = 8;
+const int __TANGO_DATA_COLOR = 9; // Built-in fonts only
+const int __TANGO_DATA_SPEED = 10;
+const int __TANGO_DATA_SFX = 11;
+const int __TANGO_DATA_OFFSET = 12;
+const int __TANGO_DATA_SCROLLING = 13;
+const int __TANGO_DATA_NEXT_STRING = 14;
+const int TANGO_DATA_A0 = 15;
+const int TANGO_DATA_A1 = 16;
+const int __TANGO_SIZEOF_DATA = 17;
+
+const int __TANGO_STRDEF_SIZE   = 0;
+const int __TANGO_STRDEF_START  = 1;
+const int __TANGO_STRDEF_X      = 2;
+const int __TANGO_STRDEF_Y      = 3;
+const int __TANGO_STRDEF_WIDTH  = 4;
+const int __TANGO_STRDEF_HEIGHT = 5;
+const int __TANGO_SIZEOF_STRDEF = 6;
+
+// 
+const int __TANGO_SPEED_NORMAL = 0;
+const int __TANGO_SPEED_FAST   = 1;
+const int __TANGO_SPEED_SUPER  = 2;
+
+// Constants for defining and working with fonts
+
+const int TANGO_FONT_BUILTIN = 0;
+const int TANGO_FONT_BUILTIN_EXTENDED = 1;
+const int TANGO_FONT_CUSTOM = 2;
+
+const int TANGO_FONT_MONOSPACE = 0;
+const int TANGO_FONT_PROPORTIONAL = 1;
+
+const int __TANGO_FONT_TYPE = 0;
+const int __TANGO_FONT_PITCH = 1;
+const int __TANGO_FONT_ID = 2; // Built-in and extended
+const int __TANGO_FONT_START_TILE = 2; // Custom
+const int __TANGO_FONT_CHAR_HEIGHT = 3;
+const int __TANGO_FONT_LINE_SPACING = 4;
+const int __TANGO_FONT_EXTENSION_TILE = 5; // Extended; unused in others
+const int __TANGO_FONT_WIDTH = 6;
+
+// For converting from ASCII to font array index
+const int __TANGO_FONT_ASCII_TO_TANGO = -26;
+const int __TANGO_FONT_ASCII_TO_CUSTOM = -33;
+
+// Highest character number in built-in fonts
+const int __TANGO_FONT_BUILTIN_MAX = 126;
+const int __TANGO_FONT_EXTENDED_START = 127;
+
+const int TANGO_CHAR_SPACE = 32;
+const int TANGO_CHAR_NEWLINE = 25;
+const int TANGO_CHAR_NULL = 0;
+const int __TANGO_CHAR_PADDING = -1;
+const int __TANGO_PRINTABLE_CHAR = 33;
+const int __TANGO_CHAR_LPAREN = 40;
+const int __TANGO_CHAR_RPAREN = 41;
+const int __TANGO_CHAR_0 = 48;
+const int __TANGO_CHAR_9 = 57;
+const int __TANGO_CHAR_a = 97;
+const int __TANGO_CHAR_z = 122;
+const int __TANGO_CHAR_MINUS = 45;
+const int __TANGO_CHAR_DOT = 46;
+const int __TANGO_CHAR_CHOICE = -1000;
+const int __TANGO_CHAR_CHOICE_END = -1100;
+
+const int __TANGO_CODE_FACTOR = 7;
+
+const float __TANGO_FUNC_SET       =     0.0986;
+const float __TANGO_FUNC_ADD       =     0.0081;
+const float __TANGO_FUNC_DELAY     =     1.1939;
+const float __TANGO_FUNC_APPEND    =     6.1058;
+const float __TANGO_FUNC_PLAYSFX   =   209.6041;
+const float __TANGO_FUNC_RAND      =     0.6325;
+const float __TANGO_FUNC_CHAR      =     0.1446;
+const float __TANGO_FUNC_NUMBER    =    29.0329;
+const float __TANGO_FUNC_ORDINAL   =   208.0657;
+const float __TANGO_FUNC_SAVENAME  =  1615.1672;
+const float __TANGO_FUNC_EQUAL     =     1.8884;
+const float __TANGO_FUNC_NOTEQUAL  =  1364.9361;
+const float __TANGO_FUNC_GREATER   =   113.9450;
+const float __TANGO_FUNC_LESS      =     0.4513;
+const float __TANGO_FUNC_WAITUNTIL = 13486.5225;
+const float __TANGO_FUNC_CHOICE    =     7.5241;
+const float __TANGO_FUNC_GETCHOICE =  4689.9543;
+
+const float __TANGO_FLOW_IF        =     0.0069;
+const float __TANGO_FLOW_WHILE     =     5.8497;
+
+const float __TANGO_VAR_DEFAULT = 57.0523;
+const float __TANGO_VAR_D0      =  0.0055;
+const float __TANGO_VAR_D1      =  0.0056;
+const float __TANGO_VAR_D2      =  0.0057;
+const float __TANGO_VAR_D3      =  0.0058;
+const float __TANGO_VAR_D4      =  0.0059;
+const float __TANGO_VAR_D5      =  0.0060;
+const float __TANGO_VAR_D6      =  0.0061;
+const float __TANGO_VAR_D7      =  0.0062;
+const float __TANGO_VAR_A0      =  0.0034;
+const float __TANGO_VAR_A1      =  0.0035;
+const float __TANGO_VAR_CHOSEN  =  7.5754;
+const float __TANGO_VAR_X       =  0.0024;
+const float __TANGO_VAR_Y       =  0.0025;
+const float __TANGO_VAR_CSET    =  0.2015;
+const float __TANGO_VAR_COLOR   =  1.3059;
+const float __TANGO_VAR_SPEED   =  5.1391;
+const float __TANGO_VAR_SFX     =  0.0997;
+const float __TANGO_VAR_NEXT    =  0.5235;
+
+
+const int __TANGO_FUNC_MARKER = -100;
+const int __TANGO_NUM_MARKER = -200;
+const int __TANGO_VAR_MARKER = -300;
+const int __TANGO_FLOW_MARKER = -400;
+const int __TANGO_FLOW_END_MARKER = -500;
+
+// Text-producing functions need a bit of padding to overwrite.
+const int __TANGO_PAD_NUMBER = 12;
+const int __TANGO_PAD_ORDINAL = 9;
+const int __TANGO_PAD_SAVENAME = 8;
+
+// TODO unused?
+int __Tango_GetStringDefData(int stringID, int what)
+{
+    return __TANGO_STRING_DEFS[stringID*__TANGO_SIZEOF_STRDEF+what];
+}
+
+int __Tango_GetCurrentCSet(int dataStart, int styleStart)
+{
+    int cset=__Tango_StringData[dataStart+__TANGO_DATA_CSET];
+    if(cset==TANGO_DEFAULT)
+        cset=__Tango_Styles[styleStart+TANGO_STYLE_TEXT_CSET];
+    return cset;
+}
+
+int __Tango_GetCurrentColor(int dataStart, int styleStart)
+{
+    int color=__Tango_StringData[dataStart+__TANGO_DATA_COLOR];
+    if(color==TANGO_DEFAULT)
+        color=__Tango_Styles[styleStart+TANGO_STYLE_TEXT_COLOR];
+    return color;
+}
+
+int __Tango_GetCurrentSpeed(int dataStart, int styleStart)
+{
+    int speed=__Tango_StringData[dataStart+__TANGO_DATA_SPEED];
+    if(speed==TANGO_DEFAULT)
+        speed=__Tango_Styles[styleStart+TANGO_STYLE_TEXT_SPEED];
+    return speed;
+}
+
+int __Tango_GetCurrentSFX(int dataStart, int styleStart)
+{
+    int sfx=__Tango_StringData[dataStart+__TANGO_DATA_SFX];
+    if(sfx==TANGO_DEFAULT)
+        sfx=__Tango_Styles[styleStart+TANGO_STYLE_TEXT_SFX];
+    return sfx;
+}
+
+bool __Tango_IsSpecialDataMarker(int character)
+{
+    // Slightly faster to check these one at a time
+    if(character==__TANGO_FUNC_MARKER)
+        return true;
+    if(character==__TANGO_NUM_MARKER)
+        return true;
+    if(character==__TANGO_VAR_MARKER)
+        return true;
+    if(character==__TANGO_FLOW_MARKER)
+        return true;
+    // TODO Should __TANGO_FLOW_END_MARKER be included?
+    return false;
+}
+

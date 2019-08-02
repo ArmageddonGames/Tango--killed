@@ -1,0 +1,319 @@
+tango.zh alpha 1
+
+
+ZScript
+
+float Tango_D[8]
+Arbitrary data. Can be used to allow ZScript and string codes to communicate.
+
+
+int Tango_GetFreeString()
+int Tango_GetFreeString(int stringType)
+Get the number of a string not currently in use. You can pass in TANGO_STRING_ANY or leave out the argument if you don't care about the size.
+
+bool Tango_ReserveString(int stringID)
+Mark a string as reserved, preventing Tango_GetFreeString() from returning the ID. Use this is you get a string ID and don't plan to use it immediately.
+Returns true if the reservation succeeded (i.e. the string wasn't already in use).
+Changing screens or using Tango_ClearString() will clear the reserved state.
+
+void Tango_ClearString(int stringID)
+Clear all data for the given stringID. You should call this before setting up a new string.
+
+void Tango_SetString(int stringID, int string[])
+void Tango_SetMessage(int stringID, int messageID)
+Load a string into the buffer. Tango_SetString takes a ZScript string; Tango_SetMessage takes a message number.
+
+int Tango_GetStringStyle(int stringID)
+void Tango_SetStringStyle(int stringID, int style)
+Get or set the style used by a string.
+
+void Tango_SetStringPosition(int stringID, int x, int y)
+Position a string on the screen.
+
+void Tango_DisplayString(int stringID)
+Display the string on the screen. Do this only after the text, style, and position.
+
+bool Tango_StringIsVisible(int stringID)
+Returns true if the string is displayed on the screen.
+
+float Tango_GetStringData(int stringID, int what)
+void Tango_SetStringData(int stringID, int what, float value)
+Use to read or set a string's a[0] and a[1]. The what argument should be TANGO_DATA_A0 or TANGO_DATA_A1.
+
+int Tango_GetStringStyleAttribute(int stringID, int attribute)
+void Tango_SetStyleAttribute(int style, int attribute, int value)
+Get or set a style attribute. Use the TANGO_STYLE arguments constants for the attribute argument.
+
+
+Style attributes:
+TANGO_STYLE_BACKDROP_TYPE
+Backdrop type. Should be one of:
+    TANGO_BACKDROP_CLEAR
+    TANGO_BACKDROP_COLOR
+    TANGO_BACKDROP_COLOR_TRANS
+    TANGO_BACKDROP_IMAGE
+    TANGO_BACKDROP_IMAGE_TRANS
+    TANGO_BACKDROP_COMPLEX
+
+TANGO_STYLE_BACKDROP_DATA
+Backdrop data array. Only used with complex backdrops.
+
+TANGO_STYLE_BACKDROP_TILE
+Backdrop starting tile. Only used with image backdrops.
+
+TANGO_STYLE_BACKDROP_CSET
+Backdrop CSet. Only used with color and image backdrops.
+
+TANGO_STYLE_BACKDROP_COLOR
+Color 0-15 within the CSet. Only used with color backdrops.
+
+TANGO_STYLE_BACKDROP_WIDTH
+TANGO_STYLE_BACKDROP_HEIGHT
+Backdrop size. Only used with images and color backdrops.
+For images, use tile size. For colors, use pixel size.
+
+TANGO_STYLE_TEXT_FONT
+Text font.
+
+TANGO_STYLE_TEXT_X
+TANGO_STYLE_TEXT_Y
+TANGO_STYLE_TEXT_WIDTH
+TANGO_STYLE_TEXT_HEIGHT
+Text position and size in pixels.
+
+TANGO_STYLE_TEXT_CSET
+TANGO_STYLE_TEXT_COLOR
+Text color. TANGO_STYLE_TEXT_COLOR is color 0-15 within the CSet.
+TANGO_STYLE_TEXT_COLOR only works for built-in font characters.
+
+TANGO_STYLE_TEXT_SPEED
+TANGO_STYLE_TEXT_SFX
+Default text speed and sound. Same as in the string editor.
+
+TANGO_STYLE_TEXT_END_SFX
+Plays when a string finishes.
+
+TANGO_STYLE_CURSOR_COMBO
+TANGO_STYLE_CURSOR_CSET
+TANGO_STYLE_CURSOR_WIDTH
+Settings for the menu cursor.
+
+TANGO_STYLE_MORE_COMBO
+TANGO_STYLE_MORE_CSET
+TANGO_STYLE_MORE_X
+TANGO_STYLE_MORE_Y
+Settings for the "Press A to continue" indicator.
+
+TANGO_STYLE_FLAGS
+One or more flags ORed together or 0 for none. Flags are:
+    TANGO_FLAG_ENABLE_SPEEDUP
+    Hold A to speed up text.
+    
+    TANGO_FLAG_ENABLE_SUPER_SPEED
+    Hold B to speed up text even more.
+    
+    TANGO_FLAG_AUTO_ADVANCE
+    Text advances to the next string and is cleared without the user pressing A.
+    
+    TANGO_FLAG_CARRY_OVER
+    The string isn't cleared when the screen changes.
+    
+    TANGO_FLAG_BLOCK_INPUT
+    All input will be canceled while this string is onscreen. This doesn't interfere with menus or the speedup flags.
+
+
+String codes
+
+Flow control functions
+
+@while(a1 a2)
+a1: condition or number
+a2: flow control or effect function
+Execute a2 as long as a1 is true. Runs once a frame.
+
+@if(a1 a2)
+a1: condition or number
+a2: flow control or effect function
+Execute a2 if a1 is true.
+
+
+Effect functions
+These functions perform some function in the game or affect the string in a way not covered by other functions. They do not return useful values.
+
+@set(a1 a2)
+a1: variable
+a2: variable or @default
+Set a1 to a2.
+
+@playsfx(a1)
+a1: number
+Play a sound.
+
+@append(a1)
+a1: number
+Appends another message to the end of the string. Useful if you run out of space or want to choose between multiple followups.
+
+@delay(a1)
+a1: number
+Pauses the text for a1 frames. Speeding up the text will reduce the time accordingly.
+
+@waituntil(a1)
+a1: condition or number
+Pauses the text until a1 is nonzero.
+
+
+Numeric functions
+These functions return numbers. They can be used as numeric or conditional arguments to other functions.
+
+@add(a1 a2)
+a1: number
+a2: number
+Returns a1+a2
+
+@rand(a1 a2)
+a1: number
+a2: number
+Returns a number between a1 and a2, inclusive.
+
+Text functions
+These functions insert text into the string.
+
+@char(a1)
+a1: number
+Inserts the character with the given number. Use for characters>=127 or line breaks (25).
+
+@number(a1)
+a1: number
+Inserts a number as text.
+
+@ordinal(a1)
+a1: number
+Inserts a number as text followed by "st", "nd", "rd", or "th".
+
+@savename()
+Inserts the save file name.
+
+
+Condition functions
+These return 1 if a condition is true or 0 if it's false. They can be used as numeric functions, but they're intended to be used with @if, @while, and @waituntil.
+
+@equal(a1 a2)
+a1: number or condition
+a2: number or condition
+True if a1 and a2 are equal.
+
+@notequal(a1 a2)
+a1: number or condition
+a2: number or condition
+True if a1 and a2 are not equal.
+
+@greater(a1 a2)
+a1: number or condition
+a2: number or condition
+True if a1 is greater than a2.
+
+@less(a1 a2)
+a1: number or condition
+a2: number or condition
+True if a1 is less than a2.
+
+
+Menu functions
+Use these functions to set up a menu.
+
+@choice(a1)
+a1: number
+Creates a menu option with value a1. a1 should not be 0. You can add up to 4 options.
+
+@getchoice()
+Clears the last choice and activates the menu. This does not suspend text printing, so you probably want to add @waituntil(@chosen) afterward.
+
+
+Variables
+
+@d0 ... @d7
+Read/write
+Use this to access Tango_D[].
+
+@a0, @a1
+Read/write
+Use these to access the string's a[0] and a[1].
+
+@x, @y
+Read/write
+The string's position on the screen.
+
+@cset, @color
+Read/write
+The string's current text color. @color refers to color 0-15 within the CSet and only applies to built-in font characters.
+
+@speed
+Read/write
+The current text speed.
+
+@sfx
+Read/write
+The current text sound.
+
+@next
+Read/write
+The next string to be shown after the current one.
+
+@chosen
+Read-only
+The last option chosen in a menu. This is 0 if a menu is currently active or no menu has been displayed yet.
+
+@default
+Read-only
+Use with @set to reset string settings to the style default.
+
+
+
+Custom functions
+
+It's possible to create your own string functions. These can be numeric, effect, or condition functions.
+The function's name must be a series of lower-case letter and numbers. There's no set limit on length, but the name must convert to a number small enough to be represented in ZScript (no greater than 214747.9999).
+
+To get a function ID, convert each character in the name to a number:
+a  b  c ... x  y  z  0  1  2  ... 7  8  9
+1  2  3 ... 24 25 26 27 28 29 ... 34 35 36
+
+Then multiply them by 7^n according to their position, add them up, and divide by 10000. For instance, for a function called @dostuff2:
+
+d   4   x7 x7 x7 x7 x7 x7 x7 = 3294172 +
+o   15  x7 x7 x7 x7 x7 x7    = 1764735 +
+s   19  x7 x7 x7 x7 x7       =  319333 +
+t   20  x7 x7 x7 x7          =   48020 +
+u   21  x7 x7 x7             =    7203 +
+f   6   x7 x7                =     294 +
+f   6   x7                   =      42 +
+2   29                       =      29
+                               -------
+                               5433828 / 10000 = 543.3828
+
+So you'd create a constant with that value:
+const float FUNC_DOSTUFF2 = 543.3828;
+
+Add it into __TANGO_CUSTOM_FUNCTIONS[] followed by the number of arguments it takes. A function can take up to 2 arguments. Set __TANGO_NUM_CUSTOM_FUNCTIONS accordingly.
+
+const int __TANGO_NUM_CUSTOM_FUNCTIONS = 1;
+
+int __TANGO_CUSTOM_FUNCTIONS[] = {
+    FUNC_DOSTUFF2, 2    // ID, number of arguments
+};
+
+Then fill in the implementation in __Tango_RunCustomFunction(). The function argument is the function ID. args is an array containing the arguments.
+
+float __Tango_RunCustomFunction(float function, float args)
+{
+    if(function==FUNC_DOSTUFF2)
+    {
+        // This'll just return the sum of the arguments.
+        return args[0]+args[1];
+    }
+    
+    return 0;
+}
+
+
+
